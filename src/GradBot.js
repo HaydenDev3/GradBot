@@ -120,6 +120,8 @@ class GradBot {
      * Start the bot
      */
     async start() {
+        console.log('🔐 BOT_TOKEN length:', (config.BOT_TOKEN || '').length);
+
         if (!config.BOT_TOKEN) {
             console.error('❌ No bot token provided. Discord bot will not start.');
             return false;
