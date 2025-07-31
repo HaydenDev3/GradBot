@@ -1,0 +1,50 @@
+# Docker Compose for GradBot
+version: '3.8'
+
+services:
+  gradbot:
+    build: .
+    ports:
+      - "27145:27145"
+    environment:
+      - NODE_ENV=production
+      - PORT=27145
+      - HOST=0.0.0.0
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:27145/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # Optional: Add a reverse proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - gradbot
+    restart: unless-stopped
+
+  # Optional: Add monitoring
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 30 --cleanup
+    restart: unless-stopped
