@@ -1,46 +1,60 @@
-
 const GradBot = require('./src/GradBot');
+const dotenv = require('dotenv');
 
-/**
- * Main entry point for the GradBot application
- */
+// Load environment variables early
+dotenv.config();
+
+// Entry Point
 async function main() {
-    console.log('🎓 Starting Graduation Bot...');
+    console.log('\n🚀 Booting Graduation Bot stack...');
     
-    // Create and start the bot
-    const bot = new GradBot();
-    const started = await bot.start();
-    
-    if (started) {
-        console.log('✅ Discord bot started successfully');
-    } else {
-        console.log('⚠️ Discord bot failed to start, continuing with web server...');
+    // Pre-flight env check
+    if (!process.env.BOT_TOKEN) {
+        console.error('❌ BOT_TOKEN is undefined. Check your .env or container settings.');
+        process.exit(1);
     }
-    
-    // Start web server independently
+
+    const bot = new GradBot();
+
+    // Try to start Discord bot
+    console.log('🎮 Launching Discord bot...');
+    const started = await bot.start();
+
+    if (started) {
+        console.log('✅ Discord bot startup complete');
+    } else {
+        console.warn('⚠️ Discord bot failed to start. Proceeding with web server only.');
+    }
+
+    // Start web server
     try {
         require('./web-server');
-        console.log('✅ Web server started successfully');
+        console.log('🌐 Web server successfully started');
     } catch (error) {
-        console.error('❌ Failed to start web server:', error);
+        console.error('❌ Failed to launch web server:', error.message);
     }
-    
-    // Graceful shutdown handling
+
+    // Keep process alive (optional fallback)
+    setInterval(() => {}, 60000); // Comment this out if `client.login()` is confirmed to work
+
+    // Global error handlers
     process.on('uncaughtException', (error) => {
-        console.error('❌ Uncaught Exception:', error);
+        console.error('💥 Uncaught Exception:', error);
         process.exit(1);
     });
-    
+
     process.on('unhandledRejection', (reason, promise) => {
-        console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+        console.error('💥 Unhandled Rejection:', reason);
         process.exit(1);
     });
+
+    console.log('\n🧠 Startup flow complete. Monitoring runtime activity...');
 }
 
-// Export for potential testing
+// Run if file is executed directly
 if (require.main === module) {
-    main().catch(error => {
-        console.error('❌ Failed to start application:', error);
+    main().catch((error) => {
+        console.error('❌ Fatal error during startup:', error.message);
         process.exit(1);
     });
 }
