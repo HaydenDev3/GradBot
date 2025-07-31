@@ -2,6 +2,7 @@ const GradBot = require('./src/GradBot');
 
 // Load environment variables early
 require('dotenv').config({ path: '/home/container/.env' });
+console.log('🧪 Loaded ENV keys:', Object.keys(process.env));
 
 // Entry Point
 async function main() {
